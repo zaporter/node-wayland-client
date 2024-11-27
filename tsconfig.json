@@ -11,10 +11,10 @@
     "moduleResolution": "node16",
     "declaration": true,
     "sourceMap": true,
-    
+
     "types": ["node", "mocha", "chai"],
     "rootDir": "./lib",
-    "outDir": "./dist",
+    "outDir": "./dist"
   },
   "include": ["./lib/**/*", "lib/index.ts"]
 }

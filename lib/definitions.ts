@@ -1,5 +1,4 @@
-
-export interface InterfaceDefinition{
+export interface InterfaceDefinition {
   name: string;
   version: number;
   description: string;
@@ -9,89 +8,101 @@ export interface InterfaceDefinition{
   enums: Record<string, EnumDefinition>;
 }
 
-export interface RequestDefinition{
+export interface RequestDefinition {
   name: string;
-  type ?:string;
+  type?: string;
   description: string;
   summary: string;
   args: ArgumentDefinition[];
 }
 
-export interface CallbackRequest extends RequestDefinition{
+export interface CallbackRequest extends RequestDefinition {
   args: [CallbackArgument, ...ArgumentDefinition[]];
 }
 
-export function isCallbackRequest(req: RequestDefinition): req is CallbackRequest{
+export function isCallbackRequest(
+  req: RequestDefinition,
+): req is CallbackRequest {
   return req?.args?.length > 0 && isCallbackArgument(req.args[0]);
 }
 
-export interface InterfaceCreationRequest extends RequestDefinition{
+export interface InterfaceCreationRequest extends RequestDefinition {
   args: [InterfaceArgument, ...ArgumentDefinition[]];
 }
 
-export function isInterfaceCreationRequest(req: RequestDefinition): req is InterfaceCreationRequest{
+export function isInterfaceCreationRequest(
+  req: RequestDefinition,
+): req is InterfaceCreationRequest {
   return req?.args?.length > 0 && isInterfaceArgument(req.args[0]);
 }
 
-export interface DestructorRequest extends RequestDefinition{
+export interface DestructorRequest extends RequestDefinition {
   type: "destructor";
   args: [];
 }
 
-export function isDestructorRequest(req: RequestDefinition): req is DestructorRequest{
+export function isDestructorRequest(
+  req: RequestDefinition,
+): req is DestructorRequest {
   return req?.type == "destructor";
 }
 
-
-
-export interface EventDefinition{
+export interface EventDefinition {
   name: string;
   description: string;
   summary: string;
   args: ArgumentDefinition[];
 }
 
-
-
-export interface ArgumentDefinition<T = ArgumentType>{
+export interface ArgumentDefinition<T = ArgumentType> {
   /**Argument name */
   name: string;
   /**Argument type */
   type: T;
   /**If the argument is a new_id, name of the interface it creates */
-  interface ?:string;
-  /** 
+  interface?: string;
+  /**
    * Short summary of the argument's role.
    * In practice it is always present in the protocol files.
    */
   summary?: string;
 }
 
-export interface InterfaceArgument extends ArgumentDefinition<"new_id">{
-  interface :string;
+export interface InterfaceArgument extends ArgumentDefinition<"new_id"> {
+  interface: string;
 }
-export interface CallbackArgument extends InterfaceArgument{
+export interface CallbackArgument extends InterfaceArgument {
   interface: "wl_callback";
 }
 
-export function isInterfaceArgument(arg: ArgumentDefinition): arg is InterfaceArgument{
-  return arg?.type == "new_id"; 
+export function isInterfaceArgument(
+  arg: ArgumentDefinition,
+): arg is InterfaceArgument {
+  return arg?.type == "new_id";
 }
 
-export function isCallbackArgument(arg :ArgumentDefinition): arg is CallbackArgument{
-  return arg?.type == "new_id" && arg.interface == "wl_callback"
+export function isCallbackArgument(
+  arg: ArgumentDefinition,
+): arg is CallbackArgument {
+  return arg?.type == "new_id" && arg.interface == "wl_callback";
 }
 
 export type EnumDefinition = EnumValue[];
 
-export interface EnumValue{
+export interface EnumValue {
   name: string;
   value: number;
   summary?: string;
 }
 
-
-export type ArgumentType = "new_id"| "uint" | "int" | "fixed" | "object" | "enum" | "string";
+export type ArgumentType =
+  | "new_id"
+  | "uint"
+  | "int"
+  | "fixed"
+  | "object"
+  | "enum"
+  | "string";
 
 export type wl_new_id = number;
 export type wl_uint = number;
@@ -105,7 +116,6 @@ export type wl_string = string;
  */
 export type wl_fd = number;
 
-
-export interface EnumReduction{
+export interface EnumReduction {
   [key: string]: number;
 }
