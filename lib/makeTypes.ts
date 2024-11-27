@@ -21,6 +21,7 @@ export default function makeTypes(
     wl_int,
     wl_fixed,
     wl_string,
+    wl_array,
     wl_fd,
   } from "${internal ? "../lib/definitions.js" : "wayland-client"}";\n` +
     interfaces.map(genInterface).join("\n")

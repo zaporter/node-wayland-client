@@ -102,7 +102,8 @@ export type ArgumentType =
   | "fixed"
   | "object"
   | "enum"
-  | "string";
+  | "string"
+  | "array";
 
 export type wl_new_id = number;
 export type wl_uint = number;
@@ -111,6 +112,7 @@ export type wl_fixed = number;
 export type wl_object = number;
 export type wl_enum = number;
 export type wl_string = string;
+export type wl_array = number[];
 /**
  * @warning This is not supported as long as there is no solution for fd transfer
  */

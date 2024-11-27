@@ -7,6 +7,8 @@ import {
   readInt,
   get_args,
   writeInt,
+  writeArray,
+  readArray,
 } from "./args.js";
 import { expect } from "chai";
 import { ArgumentDefinition, ArgumentType } from "./definitions.js";
@@ -130,7 +132,15 @@ describe("format_args()", function () {
     expect(readFixed(buffer, 0)).to.equal(3.5);
   });
 
-  ["int", "uint", "fixed", "enum", "string"].forEach((type) => {
+  it("encodes array argument", function () {
+    const args = [[5, 4, 3]];
+    const def: ArgumentDefinition[] = [{ name: "arg1", type: "array" }];
+    const buffer = format_args(args, def);
+    expect(buffer.length).to.equal(16);
+    expect(readArray(buffer, 0)).to.deep.equal([[5, 4, 3], 16]);
+  });
+
+  ["int", "uint", "fixed", "enum", "string", "array"].forEach((type) => {
     [undefined, null, {}].forEach((arg) => {
       it(`throw if an argument for ${type} is ${arg}`, function () {
         const args = [arg];
@@ -157,6 +167,14 @@ describe("format_args()", function () {
     const def: ArgumentDefinition[] = [{ name: "arg1", type: "int" }];
     expect(() => format_args(args, def)).to.throw(
       "Invalid type: string for arg1. Expected a int",
+    );
+  });
+
+  it("throw if an array element is not a number", function () {
+    const args = [[1, "foo"]];
+    const def: ArgumentDefinition[] = [{ name: "arg1", type: "array" }];
+    expect(() => format_args(args, def)).to.throw(
+      "Array contains non-number value: [1,foo] for arg1.",
     );
   });
 
@@ -209,6 +227,18 @@ describe("get_args()", function () {
         1,
       ]);
     });
+  });
+
+  it("parse array", function () {
+    const b = Buffer.alloc(32);
+    let offset = 0;
+    offset = writeUInt(b, 12, offset);
+    offset = writeUInt(b, 1, offset);
+    offset = writeUInt(b, 2, offset);
+    offset = writeUInt(b, 3, offset);
+    expect(get_args(b, [{ name: "arg1", type: "array" }])).to.deep.equal([
+      [1, 2, 3],
+    ]);
   });
 
   it(`get string argument`, function () {

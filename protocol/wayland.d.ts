@@ -5,6 +5,7 @@ import {
   wl_int,
   wl_fixed,
   wl_string,
+  wl_array,
   wl_fd,
 } from "../lib/definitions.js";
 

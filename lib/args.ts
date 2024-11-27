@@ -70,6 +70,42 @@ export function readFixed(
 }
 
 /**
+ * Read an array of unsigned 32 bit integers.
+ * @return parsed array from the buffer and the offset plus the number of bytes read.
+ */
+export function readArray(
+  b: Buffer,
+  offset: number,
+  en: "LE" | "BE" = os_en,
+): [data: number[], newOffset: number] {
+  const arrayLength = readUInt(b, offset);
+  offset += 4;
+  const arrayData = [];
+  while (offset < arrayLength + 4) {
+    arrayData.push(readUInt(b, offset, en));
+    offset += 4;
+  }
+  return [arrayData, offset];
+}
+
+/**
+ * Write an array of unsigned 32 bit integers.
+ * @return `offset` plus the number of bytes written.
+ */
+export function writeArray(
+  b: Buffer,
+  array: number[],
+  offset: number,
+  en: "LE" | "BE" = os_en,
+): number {
+  offset = writeUInt(b, array.length * 4, offset);
+  array.forEach((v) => {
+    offset = writeUInt(b, v, offset, en);
+  });
+  return offset;
+}
+
+/**
  *
  */
 export function format_args(args: any[], def: ArgumentDefinition[]): Buffer {
@@ -79,6 +115,7 @@ export function format_args(args: any[], def: ArgumentDefinition[]): Buffer {
     );
 
   let argLengths = def.map(({ type, name }, index) => {
+    const arg = args[index];
     switch (type) {
       case "new_id":
       case "uint":
@@ -88,7 +125,6 @@ export function format_args(args: any[], def: ArgumentDefinition[]): Buffer {
       case "int":
         return 4;
       case "string":
-        const arg = args[index];
         if (typeof arg !== "string")
           throw new Error(
             `Invalid type: ${typeof arg} for ${name}. Expected a ${type}`,
@@ -96,6 +132,12 @@ export function format_args(args: any[], def: ArgumentDefinition[]): Buffer {
         let strlen = Buffer.byteLength(arg, "utf-8") + 1; /* NULL byte */
         strlen = strlen % 4 != 0 ? strlen + 4 - (strlen % 4) : strlen;
         return strlen + 4 /* 32 bits uint strlen */;
+      case "array":
+        if (!Array.isArray(arg))
+          throw new Error(
+            `Invalid type: ${typeof arg} for ${name}. Expected a ${type}`,
+          );
+        return 4 + arg.length * 4;
       default:
         throw new Error(`Unsupported request argument type : ${type}`);
     }
@@ -148,6 +190,17 @@ export function format_args(args: any[], def: ArgumentDefinition[]): Buffer {
         b.write(arg + "\x00", offset + 4, "utf-8");
         offset += argLengths[i]; //account for 32bits padding when necessary
         break;
+      case "array":
+        if (!Array.isArray(arg))
+          throw new Error(
+            `Invalid type: ${typeof arg} for ${name}. Expected a ${type}`,
+          );
+        if (arg.some((v) => typeof v != "number"))
+          throw new Error(
+            `Array contains non-number value: [${arg}] for ${name}.`,
+          );
+        offset = writeArray(b, arg, offset);
+        break;
       /* c8 ignore next 2*/
       default: /* Will never get called unless we missed some case in lengths pre-parsing */
         throw new Error(`Unsupported request argument type : ${type}`);
@@ -162,6 +215,7 @@ export function format_args(args: any[], def: ArgumentDefinition[]): Buffer {
 export function get_args(b: Buffer, defs: ArgumentDefinition[]): any[] {
   const values = [];
   let offset = 0;
+  console.log("buffer", b, "defs", defs);
 
   for (let arg of defs) {
     switch (arg.type) {
@@ -190,6 +244,11 @@ export function get_args(b: Buffer, defs: ArgumentDefinition[]): any[] {
       case "fixed":
         values.push(readFixed(b, offset));
         offset += 4;
+        break;
+      case "array":
+        const [arrayData, newOffset] = readArray(b, offset);
+        values.push(arrayData);
+        offset = newOffset;
         break;
       default:
         throw new Error(`Unsupported event argument type : ${arg.type}`);
